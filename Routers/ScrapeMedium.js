@@ -1,5 +1,5 @@
 const express = require('express')
-const scrapeController = require('../Controllers/ScrapeMedium')
+const scrapeController = require('../Controllers/scrapeMedium')
 
 const router = express.Router()
 

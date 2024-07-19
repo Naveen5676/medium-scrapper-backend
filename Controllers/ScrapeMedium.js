@@ -1,23 +1,28 @@
 const puppeteer = require("puppeteer");
 require('dotenv').config();
 
+//Function to scrape articles from Medium based on a given topic.
 async function scrapeMedium(topic) {
   const browser = await puppeteer.launch({ 
     args:[
-      "--disable-setuid-sandbox",
-      "--no-sandbox",
-      "--single-process",
-      "--no-zygote",
+      "--disable-setuid-sandbox", // Disable setuid sandbox for environments without setuid support
+      "--no-sandbox", // Disable the Chromium sandbox for compatibility in restricted environments
+      "--single-process", // Run Chromium in single-process mode to reduce resource usage
+      "--no-zygote", // Disable the zygote process to simplify process management",
     ],
+
+    //Executable path depending upon the node environment 
     executablePath: process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath(),
-    headless: true });
+    headless: true// Run browser in headless mode
+  });
   let articles = [];
 
   try {
     const page = await browser.newPage();
 
+    //Navigate to medium search url with the topic
     await page.goto(`https://medium.com/search?q=${topic}`, {
-      waitUntil: "networkidle2",
+      waitUntil: "networkidle2", // Wait until the network is idle
     });
 
     // Ensure the page has loaded and the articles are available
@@ -27,9 +32,10 @@ async function scrapeMedium(topic) {
       const articleElements = document.querySelectorAll("article");
       const articlesData = [];
 
+      //Using the optional chaining operator for accessing nested properties
       articleElements.forEach((article) => {
-        const title = article.querySelector("h2")?.innerText || "";
-        const author = article.querySelector(".lx.l p.be.b.ik.z.ee.hl.ef.eg.eh.ei.ej.ek.bj")?.innerText || "";
+        const title = article.querySelector("h2")?.innerText;
+        const author = article.querySelector(".lx.l p.be.b.ik.z.ee.hl.ef.eg.eh.ei.ej.ek.bj")?.innerText;
         let date = "";
 
         // First attempt to get date using the primary selector
@@ -43,22 +49,23 @@ async function scrapeMedium(topic) {
           const elements = article.getElementsByClassName("be b ik z fd");
           if (elements.length > 0) {
             const dateElement = elements[0].querySelector("span");
-            date = dateElement?.innerText.trim() || "";
+            date = dateElement?.innerText.trim() ;
           }
         }
 
-        const url = article.querySelector('div[role="link"]')?.getAttribute("data-href") || "";
-        const imgSrc = article.querySelector('img[width="160"]')?.getAttribute("src") || "";
+        const url = article.querySelector('div[role="link"]')?.getAttribute("data-href") ;
+        const imgSrc = article.querySelector('img[width="160"]')?.getAttribute("src") ;
 
         articlesData.push({ title, author, date, url, imgSrc });
       });
 
+      //Get only the first 5 article
       return articlesData.slice(0, 5);
     });
   } catch (error) {
     console.error("Error during scraping:", error);
   } finally {
-    await browser.close();
+    await browser.close(); // Ensure browser is closed
   }
 
   return articles;

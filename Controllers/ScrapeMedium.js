@@ -4,7 +4,12 @@ require('dotenv').config();
 //Function to scrape articles from Medium based on a given topic.
 async function scrapeMedium(topic) {
   const browser = await puppeteer.launch({ 
-
+    args:[
+      "--disable-setuid-sandbox", // Disable setuid sandbox for environments without setuid support
+      "--no-sandbox", // Disable the Chromium sandbox for compatibility in restricted environments
+      "--single-process", // Run Chromium in single-process mode to reduce resource usage
+      "--no-zygote", // Disable the zygote process to simplify process management",
+    ],
 
     //Executable path depending upon the node environment 
     executablePath: process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath(),
